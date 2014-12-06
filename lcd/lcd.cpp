@@ -94,6 +94,17 @@ void LCD::home()
 	delayMicroseconds(2000);  // long lasting commmand
 }
 
+void LCD::create_char(uint8_t location, uint8_t charmap[])
+{
+	location &= 0x7;  // we only have 8 locations 0-7
+
+	command(LCD_SETCGRAMADDR | (location << 3));
+
+	for (int i = 0; i < 8; i++) {
+		write(charmap[i]);
+	}
+}
+
 void LCD::set_cursor(uint8_t col, uint8_t row)
 {
 	int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
@@ -104,25 +115,32 @@ void LCD::set_cursor(uint8_t col, uint8_t row)
 	command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
 }
 
-void LCD::no_display() {
-	_displaycontrol &= ~LCD_DISPLAYON;
-	command(LCD_DISPLAYCONTROL | _displaycontrol);
-}
-
 void LCD::display() {
 	_displaycontrol |= LCD_DISPLAYON;
 	command(LCD_DISPLAYCONTROL | _displaycontrol);
 }
 
-void LCD::create_char(uint8_t location, uint8_t charmap[])
+void LCD::no_display() {
+	_displaycontrol &= ~LCD_DISPLAYON;
+	command(LCD_DISPLAYCONTROL | _displaycontrol);
+}
+
+size_t LCD::write(const uint8_t *buffer, size_t size)
 {
-	location &= 0x7;  // we only have 8 locations 0-7
+	if (buffer == NULL) return 0;
 
-	command(LCD_SETCGRAMADDR | (location << 3));
-
-	for (int i = 0; i < 8; i++) {
-		write(charmap[i]);
+	size_t n = 0;	
+	while (size--) {
+		n += write(*buffer++);
 	}
+
+	return n;
+}
+
+size_t LCD::write(const char *buffer)
+{
+	if (str == NULL) return 0;
+	return write((const uint8_t *)buffer, strlen(buffer));
 }
 
 size_t LCD::print(const char str[])
@@ -165,24 +183,6 @@ size_t LCD::write(uint8_t value)
 {
 	send(value, HIGH);
 	return 1;
-}
-
-size_t LCD::write(const uint8_t *buffer, size_t size)
-{
-	if (buffer == NULL) return 0;
-
-	size_t n = 0;	
-	while (size--) {
-		n += write(*buffer++);
-	}
-
-	return n;
-}
-
-size_t LCD::write(const char *buffer)
-{
-	if (str == NULL) return 0;
-	return write((const uint8_t *)buffer, strlen(buffer));
 }
 
 void LCD::send(uint8_t value, uint8_t mode)

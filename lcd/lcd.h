@@ -60,14 +60,15 @@ class LCD {
 		void display();
 		void no_display();
 
-		void command(uint8_t);
-		size_t write(uint8_t value);
 		size_t write(const uint8_t *buffer, size_t size);
 		size_t write(const char *buffer);
 		size_t print(const char str[]);
 		size_t print(char c);
 		size_t print(int n);
 		size_t print_number(unsigned long n, uint8_t base);
+
+		void command(uint8_t);
+		size_t write(uint8_t value);
 
 	private:
 		void send(uint8_t value, uint8_t mode);
