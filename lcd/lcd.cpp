@@ -1,5 +1,11 @@
 #include "lcd.h"
 
+#include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
+// #include "Arduino.g"
+
+
 LCD::LCD(uint8_t rs, uint8_t rw, uint8_t enable,
 	uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3)
 {
@@ -63,7 +69,6 @@ void LCD::begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
 		write4bits(0x02);
 	}
 
-
 	// turn the display on with no cursor or blinking default
 	_displaycontrol = LCD_DISPLAYON | LCD_CURSOTOFF | LCD_BLINKOFF;
 	
@@ -80,13 +85,13 @@ void LCD::begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
 void LCD::clear()
 {
 	command(LCD_CLEARDISPLAY);
-	delayMicroseconds(2000);  // long commmand
+	delayMicroseconds(2000);  // long lasting commmand
 }
 
 void LCD::home()
 {
 	command(LCD_RETURNHOME);
-	delayMicroseconds(2000);  // long commmand
+	delayMicroseconds(2000);  // long lasting commmand
 }
 
 void LCD::set_cursor(uint8_t col, uint8_t row)
@@ -111,13 +116,44 @@ void LCD::display() {
 
 void LCD::create_char(uint8_t location, uint8_t charmap[])
 {
-	location &= 0x7;  // we onl have 8 locations 0-7
+	location &= 0x7;  // we only have 8 locations 0-7
 
 	command(LCD_SETCGRAMADDR | (location << 3));
 
 	for (int i = 0; i < 8; i++) {
 		write(charmap[i]);
 	}
+}
+
+size_t LCD::print(const char str[])
+{
+	return write(str);
+}
+
+size_t LCD::print(char c)
+{
+	return write(c);
+}
+
+size_t LCD::print(int n)
+{
+	return print_number(n, 10);
+}
+
+size_t LCD::print_number(unsigned long n, uint8_t base) {
+	char buf[8 * sizeof(long) + 1];
+	char *str = &buf[sizeof(buf) - 1];
+	*str = '\0';
+	
+	if (base < 2) base = 10;
+	do {
+		unsigned long m = n;
+		n /= base;
+		char c = m - base * n;
+		*--str = c < 10 ? c + '0' : c + 'A' - 10;
+	} while(n);
+	
+	return write(str);
 }
 
 void LCD::command(uint8_t value)
@@ -129,6 +165,24 @@ size_t LCD::write(uint8_t value)
 {
 	send(value, HIGH);
 	return 1;
+}
+
+size_t LCD::write(const uint8_t *buffer, size_t size)
+{
+	if (buffer == NULL) return 0;
+
+	size_t n = 0;	
+	while (size--) {
+		n += write(*buffer++);
+	}
+
+	return n;
+}
+
+size_t LCD::write(const char *buffer)
+{
+	if (str == NULL) return 0;
+	return write((const uint8_t *)buffer, strlen(buffer));
 }
 
 void LCD::send(uint8_t value, uint8_t mode)
@@ -156,7 +210,7 @@ void LCD::write4bits(uint8_t value)
 void LCD::pulse_enable()
 {
 	/*
-	When data is supplied to data pins, a high-t-low pulse must be apploed to this pin
+	When data is supplied to data pins, a high-t-low pulse must be applied to this pin
 	in order for LCD to latch in the data present at the data pins. This pulse must be 
 	a minimum of 450ns wide.
 	*/

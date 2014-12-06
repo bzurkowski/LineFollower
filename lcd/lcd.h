@@ -1,11 +1,9 @@
 #ifndef LCD_H
 #define LCD_H
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
-#include <inttypes.h>
-
-#define OUTPUT 1  // TODO: remove this
 
 // commands
 #define LCD_CLEARDISPLAY 0x01
@@ -39,6 +37,7 @@
 #define LCD_5x10DOTS 0x04
 #define LCD_5x8DOTS 0x00
 
+
 class LCD {
 	public:
 		LCD(uint8_t rs, uint8_t rw, uint8_t enable,
@@ -56,15 +55,20 @@ class LCD {
 
 		void clear();
 		void home();
-
 		void create_char(uint8_t location, uint8_t charmap[]);
 		void set_cursor(uint8_t col, uint8_t row);
 		void display();
 		void no_display();
 
-		size_t write(uint8_t value);
 		void command(uint8_t);
-		
+		size_t write(uint8_t value);
+		size_t write(const uint8_t *buffer, size_t size);
+		size_t write(const char *buffer);
+		size_t print(const char str[]);
+		size_t print(char c);
+		size_t print(int n);
+		size_t print_number(unsigned long n, uint8_t base);
+
 	private:
 		void send(uint8_t value, uint8_t mode);
 		void write4bits(uint8_t value);
