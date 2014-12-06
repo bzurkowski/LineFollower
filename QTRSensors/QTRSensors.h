@@ -19,7 +19,6 @@
 class QTRSensors {
 public:
 // konstruktory
-	QTRSensors(); // jezeli uzywamy tego konstruktora to najpierw trzeba wywolac init
 	QTRSensors(unsigned char *pins, unsigned char numSamplesPerSensor = 4, unsigned char emitterPin = QTR_NO_EMITTER_PIN);
 
 //funkcje
@@ -34,18 +33,18 @@ public:
 	void readCalibrated(unsigned int *sensor_values, unsigned char readMode = QTR_EMITTERS_ON);
 
 //atrybuty
-	unsigned int[NUM_QTR_SENSORS] calibratedMinimumOn;
-	unsigned int[NUM_QTR_SENSORS] calibratedMaximumOn;
-	unsigned int[NUM_QTR_SENSORS] calibratedMinimumOff;
-	unsigned int[NUM_QTR_SENSORS] calibratedMaximumOff;
+	unsigned int* calibratedMinimumOn;
+	unsigned int* calibratedMaximumOn;
+	unsigned int* calibratedMinimumOff;
+	unsigned int* calibratedMaximumOff;
 
 //destruktor
 	~QTRSensors();
 
 protected:
 
-	unsigned char *_pins;
-	unsigned char _emitterPin;
+	unsigned char[NUM_QTR_SENSORS] _pins; //numery pinow
+	unsigned char _emitterPin; //numer LEDON
 	unsigned int _maxValue;
 
 private:

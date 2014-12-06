@@ -4,21 +4,7 @@
 
 //KONSTRUKTORY
 
-QTRSensors::QTRSensors() {
-	calibratedMinimumOn = 0;
-	calibratedMaximumOn = 0;
-	calibratedMinimumOff = 0;
-	calibratedMaximumOff = 0;
-	_pins = 0;
-}
-
 QTRSensors::QTRSensors(unsigned char* pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
-	calibratedMinimumOn = 0;
-	calibratedMaximumOn = 0;
-	calibratedMinimumOff = 0;
-	calibratedMaximumOff = 0;
-	_pins = 0;
-
 	init(pins, numSamplesPerSensor, emitterPin);
 }
 
@@ -30,11 +16,6 @@ void QTRSensors::init(unsigned char *pins, unsigned char numSamplesPerSensor, un
 	calibratedMaximumOn = 0;
 	calibratedMinimumOff = 0;
 	calibratedMaximumOff = 0;
-
-	if (_pins == 0) {
-		_pins = unsigned char[NUM_QTR_SENSORS]; //TODO zmienic na malloc lub wrzucic do .h
-		if (_pins == 0) return;
-	}
 
 	for (i = 0; i < NUM_QTR_SENSORS; i++)
 		_pins[i] = pins[i];
@@ -59,9 +40,8 @@ void QTRSensors::read(unsigned int *sensor_values, unsigned char readMode = QTR_
 	if (readMode == QTR_EMITTERS_ON_AND_OFF) {
 		readPrivate(off_values);
 
-		for(i = 0; i < NUM_QTR_SENSORS, i++) {
+		for(i = 0; i < NUM_QTR_SENSORS, i++)
 			sensor_values[i] += _maxValue - off_values[i];
-		}
 	}
 }
 
@@ -147,8 +127,6 @@ void QTRSensors::readCalibrated(unsigned int *sensor_values, unsigned char readM
 void QTRSensors::readPrivate(unsigned int *sensor_values) {
 	int i, j;
 
-	if(_pins == 0) return;
-
 	for (i = 0; i < NUM_QTR_SENSORS; i++)
 		sensor_values[i] = 0;
 
@@ -165,6 +143,24 @@ void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int
 	unsigned int sensor_values[];
 	unsigned int max_sensor_values[];
 	unsigned int min_sensor_values[];
+
+	//alokacja tablic calibrated...
+	if(*calibratedMinimum == 0) {
+		*calibratedMinimum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_QTR_SENSORS);
+
+		if(*calibratedMinimum == 0) return;
+
+		for(i = 0; i < NUM_QTR_SENSORS; i++)
+			(*calibratedMinimum)[i] == _maxValue;
+	}
+	if(*calibratedMaximum == 0) {
+		*calibratedMaximum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_QTR_SENSORS);
+
+		if(*calibratedMaximum == 0) return;
+
+		for(i = 0; i < NUM_QTR_SENSORS; i++)
+			(*calibratedMaximum)[i] == 0;
+	}
 
 	//szukanie min i max na czujnikach przez 10 odczytow
 	for (i = 0; i < 10; i++) {
@@ -191,8 +187,6 @@ void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int
 //DESTRUKTOR
 
 QTRSensors::~QTRSensors() {
-	// if (_pins)
-	// 	free(_pins);
 	if (calibratedMinimumOn)
 		free(calibratedMinimumOn);
 	if (calibratedMaximumOn)
