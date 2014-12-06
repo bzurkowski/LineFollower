@@ -51,20 +51,24 @@ class LCD {
 		void init(uint8_t fourbitmode, uint8_t rs, uint8_t rw, uint8_t enable,
 				uint8_t d0, uint8_t d1, uint8_t d2, uint8_t d3,
 				uint8_t d4, uint8_t d5, uint8_t d6, uint8_t d7);
+		
 		void begin(uint8_t cols, uint8_t rows, uint8_t dotsize = LCD_5x8DOTS);
-
 
 		void clear();
 		void home();
 
-		void createChar(uint8_t, uint8_t[]);
-		void setCursor(uint8_t, uint8_t);
-		size_t write(uint8_t);
-	
+		void create_char(uint8_t location, uint8_t charmap[]);
+		void set_cursor(uint8_t col, uint8_t row);
+		void display();
+		void no_display();
+
+		size_t write(uint8_t value);
+		void command(uint8_t);
+		
 	private:
-		void send(uint8_t, uint8_t);
-		void write4bits(uint8_t);
-		void pulseEnable();
+		void send(uint8_t value, uint8_t mode);
+		void write4bits(uint8_t value);
+		void pulse_enable();
 
 		uint8_t _rs_pin; // LOW: command. HIGH: character.
 		uint8_t _rw_pin; // LOW: write to LCD. HIGH: read from LCD.

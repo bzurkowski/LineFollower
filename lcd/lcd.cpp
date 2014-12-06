@@ -77,6 +77,49 @@ void LCD::begin(uint8_t cols, uint8_t lines, uint8_t dotsize)
 	clear();
 }
 
+void LCD::clear()
+{
+	command(LCD_CLEARDISPLAY);
+	delayMicroseconds(2000);  // long commmand
+}
+
+void LCD::home()
+{
+	command(LCD_RETURNHOME);
+	delayMicroseconds(2000);  // long commmand
+}
+
+void LCD::set_cursor(uint8_t col, uint8_t row)
+{
+	int row_offsets[] = { 0x00, 0x40, 0x14, 0x54 };
+
+	if (row >= _numlines)
+		row = _numlines - 1;
+
+	command(LCD_SETDDRAMADDR | (col + row_offsets[row]));
+}
+
+void LCD::no_display() {
+	_displaycontrol &= ~LCD_DISPLAYON;
+	command(LCD_DISPLAYCONTROL | _displaycontrol);
+}
+
+void LCD::display() {
+	_displaycontrol |= LCD_DISPLAYON;
+	command(LCD_DISPLAYCONTROL | _displaycontrol);
+}
+
+void LCD::create_char(uint8_t location, uint8_t charmap[])
+{
+	location &= 0x7;  // we onl have 8 locations 0-7
+
+	command(LCD_SETCGRAMADDR | (location << 3));
+
+	for (int i = 0; i < 8; i++) {
+		write(charmap[i]);
+	}
+}
+
 void LCD::command(uint8_t value)
 {
 	send(value, LOW);
@@ -107,10 +150,10 @@ void LCD::write4bits(uint8_t value)
 		digitalWrite(_data_pins[i], (value >> i) & 0x01);
 	}
 
-	pulseEnable();
+	pulse_enable();
 }
 
-void LCD::pulseEnable()
+void LCD::pulse_enable()
 {
 	/*
 	When data is supplied to data pins, a high-t-low pulse must be apploed to this pin
