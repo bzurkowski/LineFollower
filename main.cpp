@@ -5,7 +5,7 @@
 #define KP 0.0085
 #define KD 0
 
-LCD lcd(2, 1, 13, 12, 11, 10);  // TODO: Constructor without enable
+LCD lcd(2, 1, 13, 12, 11, 10);  // TODO: Where is enable pin?
 // QTRSensorsAnalog qtra((unsigned char[]) { 0, 1, 2, 3, 4, 5 }, 6);
 
 // pins
@@ -36,8 +36,6 @@ void calibrate_sensors();
 void initialize_motors();
 void calculate_movement();
 void drive_motors();
-
-void clear_line(int, int, int);  // TODO: Move method to lcd lib
 
 byte sensor_bars[8][8] = {
   { B00000, B00000, B00000, B00000, B00000, B00000, B00000, B11111 },
@@ -148,29 +146,21 @@ void display_debug_info() {
   
   lcd.set_cursor(0, 0);
   num_printed = lcd.print(left_speed);
-  clear_line(0, num_printed, 8);
+  lcd.clear_line(0, num_printed, 8);
   
   num_printed = lcd.print(right_speed);
-  clear_line(0, 8 + num_printed, 16);
+  lcd.clear_line(0, 8 + num_printed, 16);
   
   lcd.set_cursor(8, 0);
-  clear_line(0, 8 + lcd.print(right_speed), 16);
+  lcd.clear_line(0, 8 + lcd.print(right_speed), 16);
 
   for (int i = 0; i < 6; i++) {
     lcd.set_cursor(i, 1);
     lcd.write(byte(sensors[i] / 128 % 8));
   }
 
-  clear_line(1, 8, 16);
+  lcd.clear_line(1, 8, 16);
   
   lcd.set_cursor(8, 1);
   lcd.print(error_val);
 }
-
-void clear_line(int row, int start, int end) {
-  for (int i = start; i < end; i++) {
-    lcd.set_cursor(i, row);
-    lcd.print(" ");
-  }   
-}
-

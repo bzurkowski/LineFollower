@@ -88,6 +88,13 @@ void LCD::clear()
 	delayMicroseconds(2000);  // long lasting commmand
 }
 
+void LCD::clear_line(int row, int start, int end) {
+  for (int i = start; i < end; i++) {
+    set_cursor(i, row);
+    print(" ");
+  }   
+}
+
 void LCD::home()
 {
 	command(LCD_RETURNHOME);
