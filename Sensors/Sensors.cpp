@@ -4,110 +4,110 @@
 
 //KONSTRUKTORY
 
-Sensors::Sensors(unsigned char* pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
-	init(pins, numSamplesPerSensor, emitterPin);
+Sensors::Sensors(unsigned char* pins, unsigned char num_samples_per_sensor, unsigned char emitter_pin) {
+	init(pins, num_samples_per_sensor, emitter_pin);
 }
 
 //FUNKCJE
 
-void Sensors::init(unsigned char *pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
+void Sensors::init(unsigned char *pins, unsigned char num_samples_per_sensor, unsigned char emitter_pin) {
 	int i;
-	calibratedMinimumOn = 0;
-	calibratedMaximumOn = 0;
-	calibratedMinimumOff = 0;
-	calibratedMaximumOff = 0;
+	calibrated_minimum_on = 0;
+	calibrated_maximum_on = 0;
+	calibrated_minimum_off = 0;
+	calibrated_maximum_off = 0;
 
 	for (i = 0; i < NUM_SENSORS; i++)
 		_pins[i] = pins[i];
 
-	_emitterPin = emitterPin;
-	_numSamplesPerSensor = numSamplesPerSensor;
-	_maxValue = 1023;
+	_emitter_pin = emitter_pin;
+	_num_samples_per_sensor = num_samples_per_sensor;
+	_max_value = 1023;
 }
 
-void Sensors::read(unsigned int *sensor_values, unsigned char readMode = EMITTERS_ON) {
+void Sensors::read(unsigned int *sensor_values, unsigned char read_mode = EMITTERS_ON) {
 	unsigned int off_values[NUM_SENSORS];
 	int i;
 
-	if (readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF)
-		emittersOn();
+	if (read_mode == EMITTERS_ON || read_mode == EMITTERS_ON_AND_OFF)
+		emitters_on();
 	else
-		emittersOff();
+		emitters_off();
 
-	readPrivate(sensor_values);
-	emittersOff();
+	read_private(sensor_values);
+	emitters_off();
 
-	if (readMode == EMITTERS_ON_AND_OFF) {
-		readPrivate(off_values);
+	if (read_mode == EMITTERS_ON_AND_OFF) {
+		read_private(off_values);
 
 		for(i = 0; i < NUM_SENSORS, i++)
-			sensor_values[i] += _maxValue - off_values[i];
+			sensor_values[i] += _max_value - off_values[i];
 	}
 }
 
-void Sensors::emittersOff() {
-	if (_emitterPin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wylaczyc emiterow
+void Sensors::emitters_off() {
+	if (_emitter_pin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wylaczyc emiterow
 
-	pinMode(_emitterPin, OUTPUT);
-	digitalWtire(_emitterPin, LOW);
+	pinMode(_emitter_pin, OUTPUT);
+	digitalWtire(_emitter_pin, LOW);
 	delayMicroseconds(200);
 }
 
-void Sensors::emittersOn() {
-	if (_emitterPin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wlaczyc emiterow
+void Sensors::emitters_on() {
+	if (_emitter_pin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wlaczyc emiterow
 
-	pinMode(_emitterPin, OUTPUT);
-	digitalWtire(_emitterPin, HIGH);
+	pinMode(_emitter_pin, OUTPUT);
+	digitalWtire(_emitter_pin, HIGH);
 	delayMicroseconds(200);
 }
 
-void Sensors::calibrate(unsigned char readMode) {
-	if (readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF) {
-		calibrateOnOrOff(&calibratedMinimumOn, &calibratedMaximumOn, EMITTERS_ON);
+void Sensors::calibrate(unsigned char read_mode) {
+	if (read_mode == EMITTERS_ON || read_mode == EMITTERS_ON_AND_OFF) {
+		calibrate_on_or_off(&calibrated_minimum_on, &calibrated_maximum_on, EMITTERS_ON);
 	}
-	if (readMode == EMITTERS_OFF || readMode == EMITTERS_ON_AND_OFF) {
-		calibrateOnOrOff(&calibratedMinimumOff, &calibratedMaximumOff, EMITTERS_OFF);
+	if (read_mode == EMITTERS_OFF || read_mode == EMITTERS_ON_AND_OFF) {
+		calibrate_on_or_off(&calibrated_minimum_off, &calibrated_maximum_off, EMITTERS_OFF);
 	}
 }
 
-// void resetCalibration();
-void Sensors::readCalibrated(unsigned int *sensor_values, unsigned char readMode) {
+// void reset_calibration();
+void Sensors::read_calibrated(unsigned int *sensor_values, unsigned char read_mode) {
 	int i;
 
 	//jezeli nie sa zaalokowane to wracamy
-	if(readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF)
-		if(!calibratedMinimumOn || !calibratedMaximumOn)
+	if(read_mode == EMITTERS_ON || read_mode == EMITTERS_ON_AND_OFF)
+		if(!calibrated_minimum_on || !calibrated_maximum_on)
 			return;
-	if(readMode == EMITTERS_OFF || readMode == EMITTERS_ON_AND_OFF)
-		if(!calibratedMinimumOff || !calibratedMaximumOff)
+	if(read_mode == EMITTERS_OFF || read_mode == EMITTERS_ON_AND_OFF)
+		if(!calibrated_minimum_off || !calibrated_maximum_off)
 			return;
 
 	//jezeli sa to czytamy
-	read(sensor_values, readMode);
+	read(sensor_values, read_mode);
 
 	//i poprawiamy
 	for (i = 0; i < NUM_SENSORS; i++) {
 		unsigned int calmin, calmax;
 		unsigned int denominator;
 
-		if (readMode == EMITTERS_ON) {
-			calmin = calibratedMinimumOn[i];
-			calmax = calibratedMaximumOn[i];
+		if (read_mode == EMITTERS_ON) {
+			calmin = calibrated_minimum_on[i];
+			calmax = calibrated_maximum_on[i];
 		}
-		else if (readMode == EMITTERS_OFF) {
-			calmin = calibratedMinimumOff[i];
-			calmax = calibratedMaximumOff[i];
+		else if (read_mode == EMITTERS_OFF) {
+			calmin = calibrated_minimum_off[i];
+			calmax = calibrated_maximum_off[i];
 		}
-		else { //if (readMode == EMITTERS_ON_AND_OFF)
-			if(calibratedMinimumOff[i] < calibratedMinimumOn[i]) // male znaczenie sygnalu
-				calmin = _maxValue;
+		else { //if (read_mode == EMITTERS_ON_AND_OFF)
+			if(calibrated_minimum_off[i] < calibrated_minimum_on[i]) // male znaczenie sygnalu
+				calmin = _max_value;
 			else
-				calmin = calibratedMinimumOn[i] + _maxValue - calibratedMinimumOff[i];
+				calmin = calibrated_minimum_on[i] + _max_value - calibrated_minimum_off[i];
 
-			if(calibratedMaximumOff[i] < calibratedMaximumOn[i]) // male znaczenie sygnalu
-				calmax = _maxValue;
+			if(calibrated_maximum_off[i] < calibrated_maximum_on[i]) // male znaczenie sygnalu
+				calmax = _max_value;
 			else
-				calmax = calibratedMaximumOn[i] + _maxValue - calibratedMaximumOff[i];
+				calmax = calibrated_maximum_on[i] + _max_value - calibrated_maximum_off[i];
 		}
 		
 		denominator = calmax - calmin;
@@ -124,47 +124,47 @@ void Sensors::readCalibrated(unsigned int *sensor_values, unsigned char readMode
 	}
 }
 
-void Sensors::readPrivate(unsigned int *sensor_values) {
+void Sensors::read_private(unsigned int *sensor_values) {
 	int i, j;
 
 	for (i = 0; i < NUM_SENSORS; i++)
 		sensor_values[i] = 0;
 
-	for (i = 0; i < _numSamplesPerSensor; i++)
+	for (i = 0; i < _num_samples_per_sensor; i++)
 		for (j = 0; j < NUM_SENSORS; j++)
 			sensor_values[j] += analogRead(_pins[i])
 
 	for (i = 0; i < NUM_SENSORS; i++)
-		sensor_values[i] = sensor_values[i] / _numSamplesPerSensor; //sensor_values[i] = (sensor_values[i] + (_numSamplesPerSensor >> 1)) / _numSamplesPerSensor;
+		sensor_values[i] = sensor_values[i] / _num_samples_per_sensor; //sensor_values[i] = (sensor_values[i] + (_num_samples_per_sensor >> 1)) / _num_samples_per_sensor;
 }
 
-void Sensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int **calibratedMaximum, unsigned char readMode) {
+void Sensors::calibrate_on_or_off(unsigned int **calibrated_minimum, unsigned int **calibrated_maximum, unsigned char read_mode) {
 	int i;
 	unsigned int sensor_values[];
 	unsigned int max_sensor_values[];
 	unsigned int min_sensor_values[];
 
 	//alokacja tablic calibrated...
-	if(*calibratedMinimum == 0) {
-		*calibratedMinimum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
+	if(*calibrated_minimum == 0) {
+		*calibrated_minimum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
 
-		if(*calibratedMinimum == 0) return;
+		if(*calibrated_minimum == 0) return;
 
 		for(i = 0; i < NUM_SENSORS; i++)
-			(*calibratedMinimum)[i] == _maxValue;
+			(*calibrated_minimum)[i] == _max_value;
 	}
-	if(*calibratedMaximum == 0) {
-		*calibratedMaximum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
+	if(*calibrated_maximum == 0) {
+		*calibrated_maximum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
 
-		if(*calibratedMaximum == 0) return;
+		if(*calibrated_maximum == 0) return;
 
 		for(i = 0; i < NUM_SENSORS; i++)
-			(*calibratedMaximum)[i] == 0;
+			(*calibrated_maximum)[i] == 0;
 	}
 
 	//szukanie min i max na czujnikach przez 10 odczytow
 	for (i = 0; i < 10; i++) {
-		read(sensor_values, readMode);
+		read(sensor_values, read_mode);
 
 		for (j = 0; j < NUM_SENSORS; j++) {
 			if (i == 0 || max_sensor_values[j] < sensor_values[j])
@@ -177,22 +177,22 @@ void Sensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int **
 	}
 
 	for (i = 0; i < NUM_SENSORS; i++) {
-		if(min_sensor_values[i] > (*calibratedMaximum)[i])
-			(*calibratedMaximum)[i] = min_sensor_values[i];
-		if(max_sensor_values[i] < (*calibratedMaximum)[i])
-			(*calibratedMinimum)[i] = max_sensor_values[i];
+		if(min_sensor_values[i] > (*calibrated_maximum)[i])
+			(*calibrated_maximum)[i] = min_sensor_values[i];
+		if(max_sensor_values[i] < (*calibrated_maximum)[i])
+			(*calibrated_minimum)[i] = max_sensor_values[i];
 	}
 }
 
 //DESTRUKTOR
 
 Sensors::~Sensors() {
-	if (calibratedMinimumOn)
-		free(calibratedMinimumOn);
-	if (calibratedMaximumOn)
-		free(calibratedMaximumOn);
-	if (calibratedMinimumOff)
-		free(calibratedMinimumOff);
-	if (calibratedMaximumOff)
-		free(calibratedMaximumOff);
+	if (calibrated_minimum_on)
+		free(calibrated_minimum_on);
+	if (calibrated_maximum_on)
+		free(calibrated_maximum_on);
+	if (calibrated_minimum_off)
+		free(calibrated_minimum_off);
+	if (calibrated_maximum_off)
+		free(calibrated_maximum_off);
 }

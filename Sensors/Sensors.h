@@ -19,24 +19,24 @@
 class Sensors {
 public:
 // konstruktory
-	Sensors(unsigned char *pins, unsigned char numSamplesPerSensor = 4, unsigned char emitterPin = NO_EMITTER_PIN);
+	Sensors(unsigned char *pins, unsigned char num_samples_per_sensor = 4, unsigned char emitter_pin = NO_EMITTER_PIN);
 
 //funkcje
-	void init(unsigned char *pins, unsigned char numSamplesPerSensor = 4, unsigned char emitterPin = NO_EMITTER_PIN);
+	void init(unsigned char *pins, unsigned char num_samples_per_sensor = 4, unsigned char emitter_pin = NO_EMITTER_PIN);
 
-	void read(unsigned int *sensor_values, unsigned char readMode = EMITTERS_ON);
-	void emittersOff();
-	void emittersOn();
+	void read(unsigned int *sensor_values, unsigned char read_mode = EMITTERS_ON);
+	void emitters_off();
+	void emitters_on();
 
-	void calibrate(unsigned char readMode = EMITTERS_ON);
+	void calibrate(unsigned char read_mode = EMITTERS_ON);
 // void resetCalibration();
-	void readCalibrated(unsigned int *sensor_values, unsigned char readMode = EMITTERS_ON);
+	void read_calibrated(unsigned int *sensor_values, unsigned char read_mode = EMITTERS_ON);
 
 //atrybuty
-	unsigned int* calibratedMinimumOn;
-	unsigned int* calibratedMaximumOn;
-	unsigned int* calibratedMinimumOff;
-	unsigned int* calibratedMaximumOff;
+	unsigned int* calibrated_minimum_on;
+	unsigned int* calibrated_maximum_on;
+	unsigned int* calibrated_minimum_off;
+	unsigned int* calibrated_maximum_off;
 
 //destruktor
 	~Sensors();
@@ -44,15 +44,15 @@ public:
 protected:
 
 	unsigned char[NUM_SENSORS] _pins; //numery pinow
-	unsigned char _emitterPin; //numer LEDON
+	unsigned char _emitter_pin; //numer LEDON
 	unsigned int _maxValue;
 
 private:
 
-	void readPrivate(unsigned int *sensor_values);
-	void calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int **calibratedMaximum, unsigned char readMode);
+	void read_private(unsigned int *sensor_values);
+	void calibrate_on_or_off(unsigned int **calibrated_minimum, unsigned int **calibrated_maximum, unsigned char read_mode);
 
-	unsigned char _numSamplesPerSensor;
+	unsigned char _num_samples_per_sensor;
 };
 
 #endif
