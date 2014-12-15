@@ -1,23 +1,23 @@
 #include <stdlib.h>
-#include "QTRSensors.h"
+#include "Sensors.h"
 #include <arduino.h>
 
 //KONSTRUKTORY
 
-QTRSensors::QTRSensors(unsigned char* pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
+Sensors::Sensors(unsigned char* pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
 	init(pins, numSamplesPerSensor, emitterPin);
 }
 
 //FUNKCJE
 
-void QTRSensors::init(unsigned char *pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
+void Sensors::init(unsigned char *pins, unsigned char numSamplesPerSensor, unsigned char emitterPin) {
 	int i;
 	calibratedMinimumOn = 0;
 	calibratedMaximumOn = 0;
 	calibratedMinimumOff = 0;
 	calibratedMaximumOff = 0;
 
-	for (i = 0; i < NUM_QTR_SENSORS; i++)
+	for (i = 0; i < NUM_SENSORS; i++)
 		_pins[i] = pins[i];
 
 	_emitterPin = emitterPin;
@@ -25,11 +25,11 @@ void QTRSensors::init(unsigned char *pins, unsigned char numSamplesPerSensor, un
 	_maxValue = 1023;
 }
 
-void QTRSensors::read(unsigned int *sensor_values, unsigned char readMode = QTR_EMITTERS_ON) {
-	unsigned int off_values[NUM_QTR_SENSORS];
+void Sensors::read(unsigned int *sensor_values, unsigned char readMode = EMITTERS_ON) {
+	unsigned int off_values[NUM_SENSORS];
 	int i;
 
-	if (readMode == QTR_EMITTERS_ON || readMode == QTR_EMITTERS_ON_AND_OFF)
+	if (readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF)
 		emittersOn();
 	else
 		emittersOff();
@@ -37,48 +37,48 @@ void QTRSensors::read(unsigned int *sensor_values, unsigned char readMode = QTR_
 	readPrivate(sensor_values);
 	emittersOff();
 
-	if (readMode == QTR_EMITTERS_ON_AND_OFF) {
+	if (readMode == EMITTERS_ON_AND_OFF) {
 		readPrivate(off_values);
 
-		for(i = 0; i < NUM_QTR_SENSORS, i++)
+		for(i = 0; i < NUM_SENSORS, i++)
 			sensor_values[i] += _maxValue - off_values[i];
 	}
 }
 
-void QTRSensors::emittersOff() {
-	if (_emitterPin == QTR_NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wylaczyc emiterow
+void Sensors::emittersOff() {
+	if (_emitterPin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wylaczyc emiterow
 
 	pinMode(_emitterPin, OUTPUT);
 	digitalWtire(_emitterPin, LOW);
 	delayMicroseconds(200);
 }
 
-void QTRSensors::emittersOn() {
-	if (_emitterPin == QTR_NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wlaczyc emiterow
+void Sensors::emittersOn() {
+	if (_emitterPin == NO_EMITTER_PIN) return; //jezeli nie ustawimy LEDON'a to nie mozemy wlaczyc emiterow
 
 	pinMode(_emitterPin, OUTPUT);
 	digitalWtire(_emitterPin, HIGH);
 	delayMicroseconds(200);
 }
 
-void QTRSensors::calibrate(unsigned char readMode) {
-	if (readMode == QTR_EMITTERS_ON || readMode == QTR_EMITTERS_ON_AND_OFF) {
-		calibrateOnOrOff(&calibratedMinimumOn, &calibratedMaximumOn, QTR_EMITTERS_ON);
+void Sensors::calibrate(unsigned char readMode) {
+	if (readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF) {
+		calibrateOnOrOff(&calibratedMinimumOn, &calibratedMaximumOn, EMITTERS_ON);
 	}
-	if (readMode == QTR_EMITTERS_OFF || readMode == QTR_EMITTERS_ON_AND_OFF) {
-		calibrateOnOrOff(&calibratedMinimumOff, &calibratedMaximumOff, QTR_EMITTERS_OFF);
+	if (readMode == EMITTERS_OFF || readMode == EMITTERS_ON_AND_OFF) {
+		calibrateOnOrOff(&calibratedMinimumOff, &calibratedMaximumOff, EMITTERS_OFF);
 	}
 }
 
 // void resetCalibration();
-void QTRSensors::readCalibrated(unsigned int *sensor_values, unsigned char readMode) {
+void Sensors::readCalibrated(unsigned int *sensor_values, unsigned char readMode) {
 	int i;
 
 	//jezeli nie sa zaalokowane to wracamy
-	if(readMode == QTR_EMITTERS_ON || readMode == QTR_EMITTERS_ON_AND_OFF)
+	if(readMode == EMITTERS_ON || readMode == EMITTERS_ON_AND_OFF)
 		if(!calibratedMinimumOn || !calibratedMaximumOn)
 			return;
-	if(readMode == QTR_EMITTERS_OFF || readMode == QTR_EMITTERS_ON_AND_OFF)
+	if(readMode == EMITTERS_OFF || readMode == EMITTERS_ON_AND_OFF)
 		if(!calibratedMinimumOff || !calibratedMaximumOff)
 			return;
 
@@ -86,19 +86,19 @@ void QTRSensors::readCalibrated(unsigned int *sensor_values, unsigned char readM
 	read(sensor_values, readMode);
 
 	//i poprawiamy
-	for (i = 0; i < NUM_QTR_SENSORS; i++) {
+	for (i = 0; i < NUM_SENSORS; i++) {
 		unsigned int calmin, calmax;
 		unsigned int denominator;
 
-		if (readMode == QTR_EMITTERS_ON) {
+		if (readMode == EMITTERS_ON) {
 			calmin = calibratedMinimumOn[i];
 			calmax = calibratedMaximumOn[i];
 		}
-		else if (readMode == QTR_EMITTERS_OFF) {
+		else if (readMode == EMITTERS_OFF) {
 			calmin = calibratedMinimumOff[i];
 			calmax = calibratedMaximumOff[i];
 		}
-		else { //if (readMode == QTR_EMITTERS_ON_AND_OFF)
+		else { //if (readMode == EMITTERS_ON_AND_OFF)
 			if(calibratedMinimumOff[i] < calibratedMinimumOn[i]) // male znaczenie sygnalu
 				calmin = _maxValue;
 			else
@@ -124,21 +124,21 @@ void QTRSensors::readCalibrated(unsigned int *sensor_values, unsigned char readM
 	}
 }
 
-void QTRSensors::readPrivate(unsigned int *sensor_values) {
+void Sensors::readPrivate(unsigned int *sensor_values) {
 	int i, j;
 
-	for (i = 0; i < NUM_QTR_SENSORS; i++)
+	for (i = 0; i < NUM_SENSORS; i++)
 		sensor_values[i] = 0;
 
 	for (i = 0; i < _numSamplesPerSensor; i++)
-		for (j = 0; j < NUM_QTR_SENSORS; j++)
+		for (j = 0; j < NUM_SENSORS; j++)
 			sensor_values[j] += analogRead(_pins[i])
 
-	for (i = 0; i < NUM_QTR_SENSORS; i++)
+	for (i = 0; i < NUM_SENSORS; i++)
 		sensor_values[i] = sensor_values[i] / _numSamplesPerSensor; //sensor_values[i] = (sensor_values[i] + (_numSamplesPerSensor >> 1)) / _numSamplesPerSensor;
 }
 
-void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int **calibratedMaximum, unsigned char readMode) {
+void Sensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int **calibratedMaximum, unsigned char readMode) {
 	int i;
 	unsigned int sensor_values[];
 	unsigned int max_sensor_values[];
@@ -146,19 +146,19 @@ void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int
 
 	//alokacja tablic calibrated...
 	if(*calibratedMinimum == 0) {
-		*calibratedMinimum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_QTR_SENSORS);
+		*calibratedMinimum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
 
 		if(*calibratedMinimum == 0) return;
 
-		for(i = 0; i < NUM_QTR_SENSORS; i++)
+		for(i = 0; i < NUM_SENSORS; i++)
 			(*calibratedMinimum)[i] == _maxValue;
 	}
 	if(*calibratedMaximum == 0) {
-		*calibratedMaximum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_QTR_SENSORS);
+		*calibratedMaximum = (unsigned int*)malloc(sizeof(unsigned int) * NUM_SENSORS);
 
 		if(*calibratedMaximum == 0) return;
 
-		for(i = 0; i < NUM_QTR_SENSORS; i++)
+		for(i = 0; i < NUM_SENSORS; i++)
 			(*calibratedMaximum)[i] == 0;
 	}
 
@@ -166,17 +166,17 @@ void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int
 	for (i = 0; i < 10; i++) {
 		read(sensor_values, readMode);
 
-		for (j = 0; j < NUM_QTR_SENSORS; j++) {
+		for (j = 0; j < NUM_SENSORS; j++) {
 			if (i == 0 || max_sensor_values[j] < sensor_values[j])
 				max_sensor_values[j] = sensor_values[j];
 
-		for (j = 0; j < NUM_QTR_SENSORS; j++) {
+		for (j = 0; j < NUM_SENSORS; j++) {
 			if (i == 0 || min_sensor_values[j] > sensor_values[j])
 				min_sensor_values[j] = sensor_values[j];
 		}
 	}
 
-	for (i = 0; i < NUM_QTR_SENSORS; i++) {
+	for (i = 0; i < NUM_SENSORS; i++) {
 		if(min_sensor_values[i] > (*calibratedMaximum)[i])
 			(*calibratedMaximum)[i] = min_sensor_values[i];
 		if(max_sensor_values[i] < (*calibratedMaximum)[i])
@@ -186,7 +186,7 @@ void QTRSensors::calibrateOnOrOff(unsigned int **calibratedMinimum, unsigned int
 
 //DESTRUKTOR
 
-QTRSensors::~QTRSensors() {
+Sensors::~Sensors() {
 	if (calibratedMinimumOn)
 		free(calibratedMinimumOn);
 	if (calibratedMaximumOn)
