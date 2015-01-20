@@ -22,8 +22,6 @@ public:
 	Sensors(unsigned char *pins, unsigned char num_samples_per_sensor = 4, unsigned char emitter_pin = NO_EMITTER_PIN);
 
 //funkcje
-	void init(unsigned char *pins, unsigned char num_samples_per_sensor = 4, unsigned char emitter_pin = NO_EMITTER_PIN);
-
 	void read(unsigned int *sensor_values, unsigned char read_mode = EMITTERS_ON);
 	void emitters_off();
 	void emitters_on();

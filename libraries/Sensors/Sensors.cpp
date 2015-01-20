@@ -5,12 +5,6 @@
 //KONSTRUKTORY
 
 Sensors::Sensors(unsigned char* pins, unsigned char num_samples_per_sensor, unsigned char emitter_pin) {
-	init(pins, num_samples_per_sensor, emitter_pin);
-}
-
-//FUNKCJE
-
-void Sensors::init(unsigned char *pins, unsigned char num_samples_per_sensor, unsigned char emitter_pin) {
 	int i;
 	calibrated_minimum_on = 0;
 	calibrated_maximum_on = 0;
@@ -24,6 +18,8 @@ void Sensors::init(unsigned char *pins, unsigned char num_samples_per_sensor, un
 	_num_samples_per_sensor = num_samples_per_sensor;
 	_max_value = 1023;
 }
+
+//FUNKCJE
 
 void Sensors::read(unsigned int *sensor_values, unsigned char read_mode) {
 	unsigned int off_values[NUM_SENSORS];
